@@ -1,0 +1,17 @@
+﻿@page "/signout"
+@using Frontend.Data
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+
+
+@code {
+
+    //test signout
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+}

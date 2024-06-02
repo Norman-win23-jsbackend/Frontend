@@ -1,0 +1,183 @@
+﻿@using Frontend.Data
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using Newtonsoft.Json
+
+@rendermode InteractiveServer
+
+@inject HttpClient http
+@inject IConfiguration config
+@inject IJSRuntime JSRuntime
+
+
+<section class="account-details">
+
+    <div class="container">
+
+        <AccountMenu user="@user" />
+
+        <div class="account-details-forms">
+
+            <h1 class="h3">Account Details</h1>
+
+            <p class="h4">Basic Info</p>
+
+            <EditForm Model="Input" method="post" FormName="UserContactInformation" id="account-details-basic-info-form" OnSubmit="UpdateContactInformation" novalidate>
+                <DataAnnotationsValidator />
+
+                <div class="input-div">
+                    <label for="@Input.FirstName">First name</label>
+                    <InputText @bind-Value="Input.FirstName" />
+                    <ValidationMessage For="() => Input.FirstName" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.LastName">Last name</label>
+                    <InputText @bind-Value="Input.LastName" />
+                    <ValidationMessage For="() => Input.LastName" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.Email">Email</label>
+                    <InputText @bind-Value="Input.Email" />
+                    <ValidationMessage For="() => Input.Email" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.PhoneNumber">Phone number</label>
+                    <InputText @bind-Value="Input.PhoneNumber" />
+                    <ValidationMessage For="() => Input.PhoneNumber" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.Biography">Biography</label>
+                    <InputText @bind-Value="Input.Biography" />
+                    <ValidationMessage For="() => Input.Biography" />
+                </div>
+
+                <p class="h4 mt-5">Address</p>
+
+                <div class="input-div">
+                    <label for="@Input.Address!.AddressLine1">Street name</label>
+                    <InputText @bind-Value="Input.Address.AddressLine1" />
+                    <ValidationMessage For="() => Input.Address.AddressLine1" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.Address.AddressLine2">c/o (optional)</label>
+                    <InputText @bind-Value="Input.Address.AddressLine2" />
+                    <ValidationMessage For="() => Input.Address.AddressLine2" />
+                </div>
+
+                <div class="input-div">
+                    <label for="@Input.Address.PostalCode">Postal code</label>
+                    <InputText @bind-Value="Input.Address.PostalCode" />
+                    <ValidationMessage For="() => Input.Address.PostalCode" />
+                </div>
+
+                <div class="input-div bio-textarea">
+                    <label for="@Input.Address.City">City</label>
+                    <InputText @bind-Value="Input.Address.City" />
+                    <ValidationMessage For="() => Input.Address.City" />
+                </div>
+
+                <div class="buttons">
+                    <button class="btn-gray">Cancel</button>
+                    <button type="submit" class="btn-theme">Save Changes</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</section>
+
+@code {
+
+    [Parameter]
+    public ApplicationUser user { get; set; } = null!;
+
+    [SupplyParameterFromForm]
+    private InputModel? Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input.FirstName = user.FirstName;
+        Input.LastName = user.LastName;
+        Input.Biography = user.Biography;
+        Input.PhoneNumber = user.PhoneNumber;
+        Input.Email = user.UserName!;
+
+        if (user.Address != null)
+        {
+            Input.Address.AddressLine1 = user.Address.AddressLine1;
+            Input.Address.AddressLine2 = user.Address.AddressLine2;
+            Input.Address.PostalCode = user.Address.PostalCode;
+            Input.Address.City = user.Address.City;
+        }
+    }
+
+    public async Task UpdateContactInformation()
+    {
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        user.Biography = Input.Biography;
+        user.PhoneNumber = Input.PhoneNumber;
+
+        if (Input.Address.AddressLine1 != null && Input.Address.PostalCode != null && Input.Address.City != null)
+        {
+            user.Address = new AddressEntity
+            {
+                AddressLine1 = Input.Address.AddressLine1,
+                AddressLine2 = Input.Address.AddressLine2,
+                PostalCode = Input.Address.PostalCode,
+                City = Input.Address.City,
+            };
+        }
+
+
+        var httpContent = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
+        try
+        {
+            var result = await http.PostAsync(config["Account Update"], httpContent);
+
+            if (result.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("Contact updated!");
+                StateHasChanged();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("Error: contact not updated!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+
+    private sealed class InputModel
+    {
+        [Required]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        public string LastName { get; set; } = "";
+
+        public string? Biography { get; set; }
+
+        public string? PhoneNumber { get; set; }
+
+        [Required]
+        public string Email { get; set; } = "";
+
+        public AddressModel Address { get; set; } = new AddressModel();
+    }
+    private sealed class AddressModel
+    {
+        public string? AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string? PostalCode { get; set; }
+        public string? City { get; set; }
+    }
+}

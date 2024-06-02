@@ -1,0 +1,79 @@
+﻿@page "/account/details"
+
+@using System.ComponentModel.DataAnnotations
+@using Frontend.Components.Sections
+@using Microsoft.AspNetCore.Identity
+@using Frontend.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Http
+
+@attribute [StreamRendering]
+
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IJSRuntime JSRuntime
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Profile</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        @if (user != null)
+        {
+            <AccountForm user="@user" />
+        }
+        else
+        {
+            <p>Loading user information...</p>
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <Login />
+    </NotAuthorized>
+
+</AuthorizeView>
+
+@code {
+    private ApplicationUser user { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (HttpContextAccessor == null)
+            {
+                throw new NullReferenceException("HttpContextAccessor is not injected properly.");
+            }
+
+            var httpContext = HttpContextAccessor.HttpContext;
+            if (httpContext == null || httpContext.User == null)
+            {
+               
+                Console.Error.WriteLine("HttpContext or HttpContext.User is null");
+                return;
+            }
+
+            if (UserManager == null)
+            {
+                throw new NullReferenceException("UserManager is not injected properly.");
+            }
+
+            var retrievedUser = await UserManager.GetUserAsync(httpContext.User);
+            if (retrievedUser == null)
+            {
+               
+                Console.Error.WriteLine("Failed to retrieve user from UserManager");
+                return;
+            }
+
+            user = retrievedUser;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,69 @@
+﻿@import '../core/_colors.scss';
+@import '../core/_typography.scss';
+
+form {
+    width: 100%;
+    display: grid;
+    gap: 1rem; 
+
+    .input-group {
+        display: grid;
+        position: relative; 
+        margin-bottom: 1rem; 
+
+        .validation-message {
+            position: absolute;
+            top: 100%; 
+            left: 0;
+            margin-top: 0.25rem;
+            color: $danger;
+            font-size: 0.875rem; 
+        }
+    }
+
+    .checkbox-group {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.5rem;
+
+        input[type="checkbox"] {
+            height: 1.2rem;
+            width: 1.2rem;
+            border: 0.063rem solid red;
+        }
+
+        label {
+            margin: 0;
+            font-weight: 400;
+        }
+    }
+
+    label {
+        margin-bottom: 0.188rem;
+        font-weight: 700;
+    }
+
+    input {
+        padding: 1rem;
+        border-radius: 0.5rem !important;
+        border: 0.063rem solid $gray-400;
+
+        &::placeholder {
+            opacity: 0.4;
+        }
+
+        &.input-validation-error {
+            border: 0.063rem solid $danger !important;
+        }
+    }
+
+    span.field-validation-error {
+        position: absolute;
+        top: 100%; 
+        left: 0;
+        margin-top: 0.25rem;
+        color: $danger;
+        font-size: 0.875rem; 
+    }
+}
